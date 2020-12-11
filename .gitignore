@@ -1,5 +1,10 @@
+.bundle
+.env
+.rspec_status
+bin
 docker-files/ssh-keys/id_rsa
 docker-files/ssh-keys/id_rsa.pub
 docker-files/ssh-keys/authorized_keys
-.rspec_status
 tmp
+vendor
+**/*.swp
