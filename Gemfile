@@ -3,6 +3,7 @@
 source 'https://rubygems.org'
 
 gem 'activesupport'
+gem 'cheetah'
 gem 'mina'
 gem 'nokogiri'
 gem 'octokit'
