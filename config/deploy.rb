@@ -9,18 +9,20 @@ require_relative '../lib/github_deployment'
 
 class PendingMigrationError < StandardError; end
 
+set :user, ENV['obs_user'] || 'root'
 set :domain, ENV['DOMAIN'] || 'obs'
 # if we don't unset it, it will use the default:
 # https://github.com/mina-deploy/mina/blob/master/lib/mina/backend/remote.rb#L28
 set :port, ENV['SSH_PORT'] || nil
+
 set :package_name, ENV['PACKAGE_NAME'] || 'obs-api'
 set :product, ENV['PRODUCT'] || 'SLE_12_SP4'
 set :deploy_to, ENV['DEPLOY_TO_DIR'] || '/srv/www/obs/api/'
+
 set :github_token, ENV['GITHUB_TOKEN'] || nil
 set :github_repository, ENV['GITHUB_REPOSITORY'] || nil
 set :github_branch, ENV['GITHUB_BRANCH'] || 'master'
 
-set :user, ENV['obs_user'] || 'root'
 set :check_diff, ObsDeploy::CheckDiff.new(product: fetch(:product), server: "https://#{fetch(:domain)}")
 
 # Let mina controls the dry-run
