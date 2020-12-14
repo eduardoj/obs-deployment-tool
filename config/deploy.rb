@@ -14,10 +14,11 @@ set :domain, ENV['DOMAIN'] || 'obs'
 set :port, ENV['SSH_PORT'] || nil
 set :package_name, ENV['PACKAGE_NAME'] || 'obs-api'
 set :product, ENV['PRODUCT'] || 'SLE_12_SP4'
+set :https_verify_none, ENV['HTTPS_VERIFY_NONE'] == 'true'
 set :deploy_to, ENV['DEPLOY_TO_DIR'] || '/srv/www/obs/api/'
 
 set :user, ENV['obs_user'] || 'root'
-set :check_diff, ObsDeploy::CheckDiff.new(product: fetch(:product))
+set :check_diff, ObsDeploy::CheckDiff.new(product: fetch(:product), https_verify_none: fetch(:https_verify_none))
 
 # Let mina controls the dry-run
 set :zypper, ObsDeploy::Zypper.new(package_name: fetch(:package_name), dry_run: false)
