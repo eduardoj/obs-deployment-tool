@@ -17,7 +17,7 @@ set :product, ENV['PRODUCT'] || 'SLE_12_SP4'
 set :deploy_to, ENV['DEPLOY_TO_DIR'] || '/srv/www/obs/api/'
 
 set :user, ENV['obs_user'] || 'root'
-set :check_diff, ObsDeploy::CheckDiff.new(product: fetch(:product))
+set :check_diff, ObsDeploy::CheckDiff.new(product: fetch(:product), server: "https://#{fetch(:domain)}")
 
 # Let mina controls the dry-run
 set :zypper, ObsDeploy::Zypper.new(package_name: fetch(:package_name), dry_run: false)

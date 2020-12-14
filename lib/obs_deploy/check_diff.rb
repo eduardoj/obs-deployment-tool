@@ -22,19 +22,23 @@ module ObsDeploy
     end
 
     def github_diff
-      Net::HTTP.get(
-        URI("https://github.com/openSUSE/open-build-service/compare/#{obs_running_commit}...#{package_commit}.diff")
-      )
+      url = "https://github.com/openSUSE/open-build-service/compare/#{obs_running_commit}...#{package_commit}.diff"
+      response = Net::HTTP.get_response(URI(url))
+      unless response.is_a?(Net::HTTPSuccess)
+        raise StandardError, "Error retrieving URL: #{url}, HTTP response class: #{response.class}"
+      end
+
+      response.body
     end
 
     def pending_migration?
-      return true if github_diff.nil? || github_diff.empty?
+      return false if github_diff.empty?
 
       github_diff.match?(%r{db/migrate})
     end
 
     def pending_data_migration?
-      return true if github_diff.nil? || github_diff.empty?
+      return false if github_diff.empty?
 
       github_diff.match(%r{db/data})
     end
