@@ -9,10 +9,6 @@ RSpec.describe ObsDeploy::Zypper do
     end
   end
 
-  describe 'addlock' do
-    it { expect(subject.add_lock).to eq(%w[zypper addlock obs-api]) }
-  end
-
   describe '#update' do
     context 'dry_run true' do
       it {

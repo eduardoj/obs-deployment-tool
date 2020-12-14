@@ -26,10 +26,7 @@ set :ssh_driver, ObsDeploy::SSH.new(user: fetch(:user), server: fetch(:domain), 
                                     package_name: fetch(:package_name))
 set :check_diff, ObsDeploy::CheckDiff.new(server: "https://#{fetch(:domain)}",
                                           ssh_driver: fetch(:ssh_driver))
-# Let mina controls the dry-run
 set :zypper, ObsDeploy::Zypper.new(package_name: fetch(:package_name), dry_run: false)
-set :apache_sysconfig, ObsDeploy::ApacheSysconfig.new
-set :systemctl, ObsDeploy::Systemctl.new
 set :github_deployment, GithubDeployment.new(access_token: fetch(:github_token), repository: fetch(:github_repository),
                                              ref: fetch(:github_branch))
 
@@ -125,46 +122,8 @@ namespace :obs do
   end
 end
 
-namespace :systemd do
-  desc 'obs-api list systemctl dependencies'
-  task :list_dependencies do
-    run(:remote) do
-      command Shellwords.join(fetch(:systemctl).list_dependencies)
-    end
-  end
-  desc 'obs-api status'
-  task :status do
-    run(:remote) do
-      command Shellwords.join(fetch(:systemctl).status)
-    end
-  end
-end
-
 desc 'Deploys without pending migrations'
 task deploy: 'dependencies:migration:check' do
   invoke 'obs:zypper:update'
   invoke 'obs:package:installed'
-end
-
-desc 'Deploy with pending migration'
-task :deploy_with_migration do
-  begin
-    # rubocop:disable Lint/UnreachableCode
-    raise NotImplementedError, 'Working in progress'
-    invoke 'dependencies:migration:check'
-    # rubocop:enable Lint/UnreachableCode
-  rescue PendingMigrationError
-    invoke 'zypper:update'
-    apache_sysconfig = fetch(:apache_sysconfig)
-    run(:remote) do
-      command Shellwords.join(apache_sysconfig.enable_maintenance_mode)
-      command Shellwords.join(fetch(:systemctl).restart_apache)
-      command 'run_in_api rails db:migrate'
-      command 'run_in_api rails db:migrate:with_data'
-      command Shellwords.join(apache_sysconfig.disable_maintenance_mode)
-      command Shellwords.join(fetch(:systemctl).restart_apache)
-    end
-    basic test
-    invoke 'obs:package:installed'
-  end
 end

@@ -17,21 +17,6 @@ module ObsDeploy
       run %w[zypper --non-interactive --gpg-auto-import-keys refresh]
     end
 
-    # TODO
-    # check if we want to lock from specific repositories
-    def add_lock
-      run %w[zypper addlock] + package_name
-    end
-
-    def remove_lock
-      run %w[zypper removelock] + package_name
-    end
-
-    def locked?
-      # check the return value
-      run %w[zypper locks] + package_name
-    end
-
     private
 
     def run(params)
