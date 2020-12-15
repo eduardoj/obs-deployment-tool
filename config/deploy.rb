@@ -109,6 +109,20 @@ namespace :obs do
       end
     end
   end
+
+  namespace :zypper do
+    desc 'refresh repositories'
+    task :refresh do
+      run(:remote) do
+        command Shellwords.join(fetch(:zypper).refresh)
+      end
+    end
+    task update: :refresh do
+      run(:remote) do
+        command Shellwords.join(fetch(:zypper).update)
+      end
+    end
+  end
 end
 
 namespace :systemd do
@@ -126,23 +140,9 @@ namespace :systemd do
   end
 end
 
-namespace :zypper do
-  desc 'refresh repositories'
-  task :refresh do
-    run(:remote) do
-      command Shellwords.join(fetch(:zypper).refresh)
-    end
-  end
-  task update: :refresh do
-    run(:remote) do
-      command Shellwords.join(fetch(:zypper).update)
-    end
-  end
-end
-
 desc 'Deploys without pending migrations'
 task deploy: 'dependencies:migration:check' do
-  invoke 'zypper:update'
+  invoke 'obs:zypper:update'
   invoke 'obs:package:installed'
 end
 
