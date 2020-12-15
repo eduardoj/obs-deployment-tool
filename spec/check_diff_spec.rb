@@ -40,6 +40,13 @@ RSpec.describe ObsDeploy::CheckDiff do
     end
 
     context 'no data is present' do
+      context 'if no available package' do
+        let(:running_commit) { '52a3a8b' }
+        let(:package_commit) { nil }
+
+        it { expect(check_diff.pending_migration?).to be false }
+      end
+
       context 'if no git diff is present it should abort' do
         let(:running_commit) { '52a3a8b' }
         let(:package_commit) { '2c565b0' }
