@@ -16,15 +16,16 @@ set :domain, ENV['DOMAIN'] || 'obs'
 set :port, ENV['SSH_PORT'] || nil
 
 set :package_name, ENV['PACKAGE_NAME'] || 'obs-api'
-set :product, ENV['PRODUCT'] || 'SLE_12_SP4'
 set :deploy_to, ENV['DEPLOY_TO_DIR'] || '/srv/www/obs/api/'
 
 set :github_token, ENV['GITHUB_TOKEN'] || nil
 set :github_repository, ENV['GITHUB_REPOSITORY'] || nil
 set :github_branch, ENV['GITHUB_BRANCH'] || 'master'
 
-set :check_diff, ObsDeploy::CheckDiff.new(product: fetch(:product), server: "https://#{fetch(:domain)}")
-
+set :ssh_driver, ObsDeploy::SSH.new(user: fetch(:user), server: fetch(:domain), port: fetch(:port),
+                                    package_name: fetch(:package_name))
+set :check_diff, ObsDeploy::CheckDiff.new(server: "https://#{fetch(:domain)}",
+                                          ssh_driver: fetch(:ssh_driver))
 # Let mina controls the dry-run
 set :zypper, ObsDeploy::Zypper.new(package_name: fetch(:package_name), dry_run: false)
 set :apache_sysconfig, ObsDeploy::ApacheSysconfig.new
@@ -94,14 +95,17 @@ namespace :obs do
     desc 'check installed version'
     task :installed do
       run(:local) do
-        puts "Running Version: #{fetch(:check_diff).obs_running_commit}"
+        puts "Running Version: #{fetch(:ssh_driver).installed_package_version}"
       end
     end
 
     desc 'check available version'
     task :available do
       run(:local) do
-        puts "Available Version: #{fetch(:check_diff).package_version}"
+        package_version = fetch(:ssh_driver).available_package_version
+        abort 'No Available Version found.' if package_version.nil?
+
+        puts "Available Version: #{package_version}"
       end
     end
   end
