@@ -82,10 +82,19 @@ RSpec.describe ObsDeploy::CheckDiff do
 
     context 'no data is present' do
       context 'if no git diff is present it should abort' do
+        let(:running_commit) { '52a3a8b' }
+        let(:package_commit) { '2c565b0' }
+
         before do
-          allow(check_diff).to receive(:github_diff).and_return(nil)
+          allow(check_diff).to receive(:obs_running_commit).and_return(running_commit)
+          allow(check_diff).to receive(:package_commit).and_return(package_commit)
+
+          dbl = double('Net::HTTP response')
+          allow(dbl).to receive(:class).and_return(Net::HTTPNotFound)
+          allow(Net::HTTP).to receive(:get_response).and_return(dbl)
         end
-        it { expect(check_diff.pending_migration?).to be true }
+
+        it { expect { check_diff.pending_migration? }.to raise_error Exception }
       end
     end
   end
