@@ -90,6 +90,11 @@ class GithubDeployment
     print_deployment_details(latest_deployment) unless latest_deployment.blank?
   end
 
+
+  def failure
+    @client.create_deployment_status(latest_deployment.url, 'failure')
+  end
+
   private
 
   def fetch_github_deployments

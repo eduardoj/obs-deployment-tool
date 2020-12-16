@@ -60,6 +60,11 @@ namespace :github do
     task :unlock do
       fetch(:github_deployment).unlock
     end
+
+    desc 'Mark last deployment as failed'
+    task :failure do
+      fetch(:github_deployment).failure
+    end
   end
 end
 
