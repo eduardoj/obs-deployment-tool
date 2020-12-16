@@ -53,6 +53,7 @@ class GithubDeployment
   def print_deployment_details(deployment)
     puts "Deployment created at #{deployment.created_at} by #{deployment.creator.login} for the
           #{deployment.environment} environment:"
+    puts "Payload: #{deployment.payload}" if deployment.payload.is_a?(String) && !deployment.payload.empty?
 
     print_deployment_status_details(deployment)
 
@@ -90,9 +91,9 @@ class GithubDeployment
     print_deployment_details(latest_deployment) unless latest_deployment.blank?
   end
 
-  def in_progress
+  def in_progress(available_package_version)
     if latest_deployment.nil?
-      create_a_deployment_and_in_progress
+      create_a_deployment_and_in_progress(available_package_version)
       return true
     end
 
@@ -121,7 +122,7 @@ class GithubDeployment
       return
     end
 
-    create_a_deployment_and_in_progress
+    create_a_deployment_and_in_progress(available_package_version)
   end
 
   def success
@@ -187,18 +188,21 @@ class GithubDeployment
     @client.create_deployment_status(deployment.url, 'queued', { accept: 'application/vnd.github.flash-preview+json' })
   end
 
-  def create_a_deployment_and_in_progress
-    deployment = create_deployment
+  def create_a_deployment_and_in_progress(available_package_version)
+    deployment = create_deployment(payload: "{\"commit\": \"#{available_package_version}\"}")
     @client.create_deployment_status(deployment.url, 'in_progress',
                                      { accept: 'application/vnd.github.flash-preview+json' })
   end
 
-  def create_deployment
+  def create_deployment(payload: nil)
     # prevent working with outdated data, we have to retrieve fresh
     # data after creating new deployments
     @all_github_deployments = []
     @latest_deployment = nil
 
-    @client.create_deployment(@repository, @ref, { auto_merge: false })
+    options = { auto_merge: false }
+    options[:payload] = payload unless payload.nil?
+
+    @client.create_deployment(@repository, @ref, options)
   end
 end

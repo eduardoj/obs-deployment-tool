@@ -129,7 +129,7 @@ end
 
 desc 'Deploys without pending migrations'
 task deploy: 'dependencies:migration:check' do
-  fetch(:github_deployment).in_progress || abort
+  fetch(:github_deployment).in_progress(fetch(:ssh_driver).available_package_version) || abort
   begin
     invoke 'obs:zypper:update'
   rescue SystemExit
