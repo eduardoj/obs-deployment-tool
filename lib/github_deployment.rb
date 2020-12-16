@@ -90,6 +90,68 @@ class GithubDeployment
     print_deployment_details(latest_deployment) unless latest_deployment.blank?
   end
 
+  def in_progress
+    if latest_deployment.nil?
+      create_a_deployment_and_in_progress
+      return true
+    end
+
+    deployment_status = latest_deployment_status(latest_deployment)
+
+    if deployment_status.nil?
+      puts "It can not be deployed. An status could not be retrieved.\n\n"
+      print_deployment_details(latest_deployment)
+      return
+    end
+
+    current_state = deployment_status.state
+
+    case current_state
+    when 'queued'
+      puts "The last deployment is already locked. The deploy will not be performed.\n\n"
+    when 'in_progress'
+      puts "The last deployment is not locked, but in state '#{current_state}'. The deploy will not be performed.\n\n"
+    else
+      perform_deploy = true
+    end
+
+    perform_deploy ||= false
+    unless perform_deploy
+      print_deployment_details(latest_deployment)
+      return
+    end
+
+    create_a_deployment_and_in_progress
+  end
+
+  def success
+    deployment_status = latest_deployment_status(latest_deployment)
+
+    if deployment_status.nil?
+      puts "Deployment can not be marked as 'success'.\n\n"
+      print_deployment_details(latest_deployment)
+      return
+    end
+
+    current_state = deployment_status.state
+
+    if current_state == 'queued'
+      puts "The deployment is locked. The change to state 'success' will not be performed.\n\n"
+    elsif current_state != 'in_progress'
+      puts "The last deployment is not 'in_progress', but in state '#{current_state}'. "\
+           "The change to state 'success' will not be performed.\n\n"
+    else
+      perform_change = true
+    end
+
+    perform_change ||= false
+    unless perform_change
+      print_deployment_details(latest_deployment)
+      return false
+    end
+
+    @client.create_deployment_status(latest_deployment.url, 'success')
+  end
 
   def failure
     @client.create_deployment_status(latest_deployment.url, 'failure')
@@ -123,6 +185,12 @@ class GithubDeployment
   def create_a_deployment_and_lock
     deployment = create_deployment
     @client.create_deployment_status(deployment.url, 'queued', { accept: 'application/vnd.github.flash-preview+json' })
+  end
+
+  def create_a_deployment_and_in_progress
+    deployment = create_deployment
+    @client.create_deployment_status(deployment.url, 'in_progress',
+                                     { accept: 'application/vnd.github.flash-preview+json' })
   end
 
   def create_deployment

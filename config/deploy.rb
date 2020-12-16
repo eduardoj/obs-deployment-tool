@@ -129,6 +129,14 @@ end
 
 desc 'Deploys without pending migrations'
 task deploy: 'dependencies:migration:check' do
-  invoke 'obs:zypper:update'
+  fetch(:github_deployment).in_progress || abort
+  begin
+    invoke 'obs:zypper:update'
+  rescue SystemExit
+    fetch(:github_deployment).failure
+    exit 1
+  end
+
+  fetch(:github_deployment).success
   invoke 'obs:package:installed'
 end

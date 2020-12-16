@@ -18,3 +18,5 @@ RSpec.configure do |config|
 end
 
 WebMock.disable_net_connect!
+
+Dir['./spec/support/shared_contexts/*.rb'].sort.each { |file| require file }
