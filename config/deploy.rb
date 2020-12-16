@@ -5,6 +5,7 @@ require 'bundler/setup'
 require 'mina/deploy'
 
 require_relative '../lib/obs_deploy'
+require_relative '../lib/github_deployment'
 
 class PendingMigrationError < StandardError; end
 
@@ -15,6 +16,9 @@ set :port, ENV['SSH_PORT'] || nil
 set :package_name, ENV['PACKAGE_NAME'] || 'obs-api'
 set :product, ENV['PRODUCT'] || 'SLE_12_SP4'
 set :deploy_to, ENV['DEPLOY_TO_DIR'] || '/srv/www/obs/api/'
+set :github_token, ENV['GITHUB_TOKEN'] || nil
+set :github_repository, ENV['GITHUB_REPOSITORY'] || nil
+set :github_branch, ENV['GITHUB_BRANCH'] || 'master'
 
 set :user, ENV['obs_user'] || 'root'
 set :check_diff, ObsDeploy::CheckDiff.new(product: fetch(:product), server: "https://#{fetch(:domain)}")
@@ -23,12 +27,38 @@ set :check_diff, ObsDeploy::CheckDiff.new(product: fetch(:product), server: "htt
 set :zypper, ObsDeploy::Zypper.new(package_name: fetch(:package_name), dry_run: false)
 set :apache_sysconfig, ObsDeploy::ApacheSysconfig.new
 set :systemctl, ObsDeploy::Systemctl.new
+set :github_deployment, GithubDeployment.new(access_token: fetch(:github_token), repository: fetch(:github_repository),
+                                             ref: fetch(:github_branch))
 
 # tasks without description shouldn't be called in the CLI
 namespace :dependencies do
   namespace :migration do
     task :check do
       raise ::PendingMigrationError, 'pending migration' if fetch(:check_diff).pending_migration?
+    end
+  end
+end
+
+namespace :github do
+  namespace :deployments do
+    desc 'list a history of all performed deployments'
+    task :history do
+      fetch(:github_deployment).print_deployment_history
+    end
+
+    desc 'infos about the latest deployment'
+    task :current do
+      fetch(:github_deployment).current
+    end
+
+    desc 'Lock deployments'
+    task :lock do
+      fetch(:github_deployment).lock
+    end
+
+    desc 'Unlock deployments'
+    task :unlock do
+      fetch(:github_deployment).unlock
     end
   end
 end
