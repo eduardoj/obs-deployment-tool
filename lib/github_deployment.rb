@@ -15,7 +15,7 @@ class GithubDeployment
   def lock
     deployment = latest_deployment
 
-    return create_a_deployment_and_lock if deployment.blank?
+    return create_deployment_and_status('queued') if deployment.blank?
 
     deployment_status = latest_deployment_status(deployment)
 
@@ -39,7 +39,7 @@ class GithubDeployment
 
     return print_deployment_details(deployment) unless perform_lock
 
-    create_a_deployment_and_lock
+    create_deployment_and_status('queued')
   end
 
   def print_deployment_history
@@ -83,8 +83,7 @@ class GithubDeployment
       return
     end
 
-    @client.create_deployment_status(latest_deployment.url, 'inactive',
-                                     { accept: 'application/vnd.github.ant-man-preview+json' })
+    create_deployment_status(latest_deployment, 'inactive')
   end
 
   def current
@@ -93,7 +92,7 @@ class GithubDeployment
 
   def in_progress(available_package_version)
     if latest_deployment.nil?
-      create_a_deployment_and_in_progress(available_package_version)
+      create_deployment_and_status('in_progress', "{\"commit\": \"#{available_package_version}\"}")
       return true
     end
 
@@ -122,7 +121,7 @@ class GithubDeployment
       return
     end
 
-    create_a_deployment_and_in_progress(available_package_version)
+    create_deployment_and_status('in_progress', "{\"commit\": \"#{available_package_version}\"}")
   end
 
   def success
@@ -151,11 +150,11 @@ class GithubDeployment
       return false
     end
 
-    @client.create_deployment_status(latest_deployment.url, 'success')
+    create_deployment_status(latest_deployment, 'success')
   end
 
   def failure
-    @client.create_deployment_status(latest_deployment.url, 'failure')
+    create_deployment_status(latest_deployment, 'failure')
   end
 
   private
@@ -183,18 +182,12 @@ class GithubDeployment
     fetch_deployment_statuses(deployment).first
   end
 
-  def create_a_deployment_and_lock
-    deployment = create_deployment
-    @client.create_deployment_status(deployment.url, 'queued', { accept: 'application/vnd.github.flash-preview+json' })
+  def create_deployment_and_status(status, payload = nil)
+    deployment = create_deployment(payload)
+    create_deployment_status(deployment, status)
   end
 
-  def create_a_deployment_and_in_progress(available_package_version)
-    deployment = create_deployment(payload: "{\"commit\": \"#{available_package_version}\"}")
-    @client.create_deployment_status(deployment.url, 'in_progress',
-                                     { accept: 'application/vnd.github.flash-preview+json' })
-  end
-
-  def create_deployment(payload: nil)
+  def create_deployment(payload = nil)
     # prevent working with outdated data, we have to retrieve fresh
     # data after creating new deployments
     @all_github_deployments = []
@@ -204,5 +197,18 @@ class GithubDeployment
     options[:payload] = payload unless payload.nil?
 
     @client.create_deployment(@repository, @ref, options)
+  end
+
+  def create_deployment_status(deployment, status)
+    accepted_format = case status
+                      when 'inactive'
+                        { accept: 'application/vnd.github.ant-man-preview+json' }
+                      when 'queued', 'in_progress'
+                        { accept: 'application/vnd.github.flash-preview+json' }
+                      else
+                        {}
+                      end
+
+    @client.create_deployment_status(deployment.url, status, accepted_format)
   end
 end
