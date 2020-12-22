@@ -52,8 +52,8 @@ namespace :github do
     end
 
     desc 'Lock deployments'
-    task :lock do
-      fetch(:github_deployment).lock
+    task :lock, [:reason] do |_task, arguments|
+      fetch(:github_deployment).lock(reason: arguments[:reason])
     end
 
     desc 'Unlock deployments'

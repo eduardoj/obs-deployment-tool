@@ -12,10 +12,12 @@ class GithubDeployment
     @ref = ref
   end
 
-  def lock
+  def lock(reason:)
     deployment = latest_deployment
 
-    return create_deployment_and_status('queued') if deployment.blank?
+    payload_reason = "{\"reason\": \"#{reason}\"}" if reason.present?
+
+    return create_deployment_and_status('queued', payload_reason) if deployment.blank?
 
     deployment_status = latest_deployment_status(deployment)
 
@@ -39,7 +41,7 @@ class GithubDeployment
 
     return print_deployment_details(deployment) unless perform_lock
 
-    create_deployment_and_status('queued')
+    create_deployment_and_status('queued', payload_reason)
   end
 
   def print_deployment_history
