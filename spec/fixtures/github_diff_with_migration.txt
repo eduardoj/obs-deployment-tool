@@ -16,7 +16,7 @@ Set-Cookie: _gh_sess=1eK0cuqGcYsEMipcpOSFs4dYsu9TPqkgjHi5E%2Bq5w7lCdZfFuBEwN1Pd1
 Set-Cookie: _octo=GH1.1.295680784.1585643913; Path=/; Domain=github.com; Expires=Wed, 31 Mar 2021 08:38:33 GMT; Secure
 Set-Cookie: logged_in=no; Path=/; Domain=github.com; Expires=Wed, 31 Mar 2021 08:38:33 GMT; HttpOnly; Secure
 Accept-Ranges: bytes
-Content-Length: 821
+Content-Length: 1243
 X-GitHub-Request-Id: EAC4:3E378:521F4:72F16:5E830188
 
 diff --git a/src/api/db/migrate/20180110074142_change_handler_to_longtext_in_delayed_jobs.rb b/src/api/db/migrate/20180110074142_change_handler_to_longtext_in_delayed_jobs.rb
@@ -36,3 +36,14 @@ index 5cef8c14673..932a54b4a32 100644
      end
    end
  end
+diff --git a/src/api/db/migrate/20201209105103_add_channel_disable_flag.rb b/src/api/db/migrate/20201209105103_add_channel_disable_flag.rb
+new file mode 100644
+index 00000000000..1d2326052ad
+--- /dev/null
++++ b/src/api/db/migrate/20201209105103_add_channel_disable_flag.rb
+@@ -0,0 +1,5 @@
++class AddChannelDisableFlag < ActiveRecord::Migration[6.0]
++  def change
++    add_column :channels, :disabled, :boolean
++  end
++end

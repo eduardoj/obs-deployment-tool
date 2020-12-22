@@ -74,7 +74,7 @@ RSpec.describe ObsDeploy::CheckDiff do
       let(:running_commit) { '2392177' }
       let(:package_commit) { '8c6783b' }
 
-      it { expect(check_diff.pending_migration?).to be true }
+      it { expect(check_diff.pending_data_migration?).to be true }
     end
   end
 
@@ -90,11 +90,11 @@ RSpec.describe ObsDeploy::CheckDiff do
     context 'data is present' do
       context 'pending migration' do
         let(:fixture_file) { File.new('spec/fixtures/github_diff_with_migration.txt') }
-        let(:migration_file) { 'db/migrate/20180110074142_change_handler_to_longtext_in_delayed_jobs.rb' }
+        let(:migration_file) { 'db/migrate/20201209105103_add_channel_disable_flag.rb' }
         let(:running_commit) { '52a3a8b' }
         let(:package_commit) { '2c565b0' }
 
-        it { expect(subject.first).to include(migration_file) }
+        it { expect(subject).to contain_exactly(migration_file) }
       end
 
       context 'no pending migration' do

@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+REGULAR_EXPRESSION_FOR_MIGRATION = %r{^--- /dev/null\n\+{3}.+/src/api/(db/migrate/.+\.rb)$}.freeze
+REGULAR_EXPRESSION_FOR_DATA_MIGRATION = %r{^--- /dev/null\n\+{3}.+/src/api/(db/data/.+\.rb)$}.freeze
+
 module ObsDeploy
   class CheckDiff
     def initialize(ssh_driver:, server: 'https://api.opensuse.org')
@@ -11,20 +14,20 @@ module ObsDeploy
       github_diff
       return false if @github_diff.empty?
 
-      @github_diff.match?(%r{db/migrate})
+      @github_diff.match?(REGULAR_EXPRESSION_FOR_MIGRATION)
     end
 
     def pending_data_migration?
       github_diff
       return false if @github_diff.empty?
 
-      @github_diff.match(%r{db/data})
+      @github_diff.match?(REGULAR_EXPRESSION_FOR_DATA_MIGRATION)
     end
 
     def migrations
       return [] unless pending_migration?
 
-      @github_diff.match(%r{db/migrate/.*\.rb}).to_a
+      @github_diff.scan(REGULAR_EXPRESSION_FOR_MIGRATION).flatten
     end
 
     private
