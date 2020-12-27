@@ -86,6 +86,18 @@ namespace :obs do
     end
   end
 
+  namespace :data_migration do
+    desc 'Check for pending data migrations'
+    task :check do
+      if fetch(:check_diff).pending_data_migration?
+        puts 'There are pending data migrations.'
+        exit
+      end
+
+      puts 'No pending data migrations found.'
+    end
+  end
+
   desc 'get diff'
   task :diff do
     run(:local) do
