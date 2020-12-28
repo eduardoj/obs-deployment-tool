@@ -29,6 +29,7 @@ set :check_diff, ObsDeploy::CheckDiff.new(server: "https://#{fetch(:domain)}",
 set :zypper, ObsDeploy::Zypper.new(package_name: fetch(:package_name), dry_run: false)
 set :github_deployment, GithubDeployment.new(access_token: fetch(:github_token), repository: fetch(:github_repository),
                                              ref: fetch(:github_branch))
+set :run_in_api, ObsDeploy::RunInAPI.new()
 
 # tasks without description shouldn't be called in the CLI
 namespace :dependencies do
@@ -144,6 +145,12 @@ task deploy: 'dependencies:migration:check' do
   fetch(:github_deployment).in_progress(fetch(:ssh_driver).available_package_version) || abort
   begin
     invoke 'obs:zypper:update'
+
+    if fetch(:check_diff).pending_data_migration?
+      run(:remote) do
+        command Shellwords.join(fetch(:run_in_api).db_migrate_with_data)
+      end
+    end
   rescue SystemExit
     fetch(:github_deployment).failure
     exit 1

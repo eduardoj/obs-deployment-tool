@@ -10,6 +10,7 @@ require_relative 'obs_deploy/version'
 require_relative 'obs_deploy/check_diff'
 require_relative 'obs_deploy/zypper'
 require_relative 'obs_deploy/ssh'
+require_relative 'obs_deploy/run_in_api'
 require 'tempfile'
 
 module ObsDeploy
